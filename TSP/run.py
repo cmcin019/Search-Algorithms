@@ -132,7 +132,11 @@ def local_search(dist_dict, state, cost, aggressive=False, random_ascent=False, 
 	# # Simulated annealing
 	# if T > 0:
 	# 	pass
-		
+	cost_ = 0
+	for x in range(len(state)-1):
+		cost_ += dist_dict[state[x]][state[x+1]]
+	print(cost_ == cost[-1])
+	print(cost[-1], best_cost[-1])
 	return best_state, best_cost
 
 def first_ascent_hill_climbing_search(dist_dict, state, cost):
@@ -150,6 +154,13 @@ def run(dist_dict, state, cost, search, name):
 	state, cost = search(dist_dict, state, cost)
 	stop = default_timer()
 	#print(cost[-1],'\n',new_state)
+
+	# Check if cost was properly calculated
+	cost_ = 0
+	for x in range(len(state)-1):
+		cost_ += dist_dict[state[x]][state[x+1]]
+	print(cost_ == cost[-1])
+
 	print('Exec time:', stop - start)
 	print(name)
 	print(cost[-1],'\n')
@@ -172,7 +183,7 @@ def main() -> None:
 	lines = f.readlines()
 	f.close()
 	
-	lines = lines[6:-1]
+	lines = lines[6:-1][:100]
 	dist_dict = to_dict(lines)
 	
 	# Random state
@@ -206,11 +217,8 @@ def main() -> None:
 		f.write(str(x)+'\n')
 	f.close()
 
-	cost = 0
-	for x in range(len(dist_dict)-1):
-		cost+= dist_dict[state[x]][state[x+1]]
 	# system('cls' if os.name == 'nt' else 'clear')
-	print(cost)
+	print(cost[-1])
 	
 
 if __name__ == "__main__":
