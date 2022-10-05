@@ -3,18 +3,17 @@
 # S-N       : 300025114
 
 import argparse
-from asyncio import current_task
-from math import cos
+from cProfile import label
 # from typing import Dict
 import matplotlib.pyplot as plt
 import numpy as np
 from random import randint, sample
-from operator import itemgetter
 import os
 from os import stat, system
 from timeit import default_timer
 # from tqdm import tqdm
-
+global max_it
+max_it = 0
 # Cost matrix for evaluation of solution fitness
 def to_dict(nodes):
 	# Create NxN distance matrix between cities 
@@ -50,23 +49,38 @@ def get_cost(dist_dict, state):
 	return cost
 
 # Random start
-def random_search(dist_dict, i=1):
-	state = sample(list(dist_dict.keys()), len(dist_dict))
+def random_search(dist_dict, args, ax, i=1):
+	plot_costs = []
+	plot_it = []
+	state = list(sample(list(dist_dict.keys()), len(dist_dict)))
 	cost = get_cost(dist_dict, state)
-	for _ in range(i-1):
-		new_state = sample(list(dist_dict.keys()), len(dist_dict))
+	for it in range(i-1):
+		if it % 10000 == 0:
+			system('cls' if os.name == 'nt' else 'clear')
+			print(f'Random x {i}')
+			print(f'Step: {it}')
+			print(f'Path size: {cost}')
+		new_state = list(sample(list(dist_dict.keys()), len(dist_dict)))
 		new_cost = get_cost(dist_dict, new_state)
 		if cost > new_cost :
-			state, cost = new_state, new_cost	
+			state, cost = list(new_state), new_cost	
+		plot_costs.append(cost)
+		plot_it.append(it)
+	if args.l and i != 1:
+		ax.plot(plot_it, plot_costs, label=f'Random x {i}')
+		ax.set(xlabel='Iteration', ylabel='Length')
 	return state, cost
 
 # Look through all neighbour solutions
-def local_search(dist_dict, state, cost, aggressive=False, random_ascent=False, random_restart=0, T=0):
+def local_search(dist_dict, state, cost, args, ax, name, aggressive=False, random_ascent=False):
 	# Initial best state and cost
 	current_state = state
 	best_state = state
 	best_cost = cost
-	
+	plot_costs = []
+	plot_it = []
+	global max_it
+
 	# Continue while better states are found
 	flag = True 
 	it = 0
@@ -83,12 +97,19 @@ def local_search(dist_dict, state, cost, aggressive=False, random_ascent=False, 
 			for j in range(i+1, len(state)): # Second neighbour to swap
 				# Number of neighbours swaped
 				it +=1
-				
+	
+				if it % 10000 == 0:
+					system('cls' if os.name == 'nt' else 'clear')
+					print('And now we play the waiting game \n')
+					print(' '.join(name.split()[0:2]+['Rx4000' if '4' in name else 'Rx1']))
+					print(f'Step: {it}')
+					print(f'Path size: {best_cost}')
+
 				# Neighbour state
-				current_state = [x for x in best_state]
+				# current_state = [x for x in best_state]
+				current_state = list(best_state)
 				current_state[i], current_state[j] = best_state[j], best_state[i]
 
-				# print(current_state == best_state, best_state[j], best_state[i], current_state[j], current_state[i], i, j)
 				# Neighbour cost
 				current_cost = get_cost(dist_dict, current_state)
 				
@@ -103,8 +124,6 @@ def local_search(dist_dict, state, cost, aggressive=False, random_ascent=False, 
 
 						# Add neighbour to list of better states
 						r_ascent_batch.append((current_state, current_cost))
-						# print(current_state == best_state)
-
 						
 						# Do not update best state and cost
 						continue
@@ -112,6 +131,8 @@ def local_search(dist_dict, state, cost, aggressive=False, random_ascent=False, 
 					# Update the best state and cost
 					best_state = current_state
 					best_cost = current_cost
+					plot_costs.append(best_cost)
+					plot_it.append(it)
 					
 					# Break out of loop after finding better state
 					break
@@ -124,59 +145,34 @@ def local_search(dist_dict, state, cost, aggressive=False, random_ascent=False, 
 		if flag and (aggressive or random_ascent):
 			if aggressive:
 				best_state, best_cost = min(r_ascent_batch, key = lambda t: t[1])
-				# best_state = state
+				plot_costs.append(best_cost)
+				plot_it.append(it)
 			else:
 				best_state, best_cost = sample(r_ascent_batch, 1)[0]
-				# best_state = state
-
-	print('Steps:', it)
+				plot_costs.append(best_cost)
+				plot_it.append(it)
 	
-	# # Random restart
-	# if random_restart > 0:
-	# 	rand_state, rand_cost = random_search(dist_dict)
-	# 	rand_state, rand_cost = local_search(dist_dict, rand_state, rand_cost, aggressive=aggressive, random_ascent=random_ascent, random_restart=random_restart-1)
-	# 	if rand_cost < best_cost:
-	# 		best_state, best_cost = rand_state, rand_cost
+	if it > max_it:
+		max_it = it
 
-	# # Simulated annealing
-	# if T > 0:
-	# 	pass
-
-	# Check if cost was properly calculated
-	cost_ = 0
-	cost_from_get = get_cost(dist_dict, best_state)
-	for x in range(len(best_state)-1):
-		cost_ += dist_dict[best_state[x]][best_state[x+1]]
-	print(cost_, best_cost, cost_from_get, best_cost == cost_)
-
+	if args.l:
+		ax.plot(plot_it, plot_costs, label=' '.join(name.split()[0:2]+[' Rx4000' if '4' in name else 'Rx1']))
+		ax.set(xlabel='Iteration', ylabel='Length')
 
 	return best_state, best_cost
 
-def first_ascent_hill_climbing_search(dist_dict, state, cost):
-	return local_search(dist_dict, state, cost, aggressive=False, random_ascent=False)
+def first_ascent_hill_climbing_search(dist_dict, state, cost, args, ax, name):
+	return local_search(dist_dict, state, cost, args, ax, name, aggressive=False, random_ascent=False)
 
-def steepest_ascent_hill_climbing_search(dist_dict, state, cost):
-	return local_search(dist_dict, state, cost, aggressive=True, random_ascent=False)
+def steepest_ascent_hill_climbing_search(dist_dict, state, cost, args, ax, name):
+	return local_search(dist_dict, state, cost, args, ax, name, aggressive=True, random_ascent=False)
 	
-def random_ascent_hill_climbing_search(dist_dict, state, cost):
-	return local_search(dist_dict, state, cost, aggressive=False, random_ascent=True)
+def random_ascent_hill_climbing_search(dist_dict, state, cost, args, ax, name):
+	return local_search(dist_dict, state, cost, args, ax, name, aggressive=False, random_ascent=True)
 
 
-def run(dist_dict, state, cost, search, name, args, node_coord_dict, list_i_1, list_i_2):
-	start = default_timer()
-	state, cost = search(dist_dict, state, cost)
-	stop = default_timer()
-
-	# Check if cost was properly calculated
-	cost_ = 0
-	cost_from_get = get_cost(dist_dict, state)
-	for x in range(len(state)-1):
-		cost_ += dist_dict[state[x]][state[x+1]]
-	print(cost_, cost, cost_from_get, cost == cost_)
-
-	print('Exec time:', stop - start)
-	print(name)
-	print(cost,'\n')
+def run(dist_dict, state, cost, search, name, args, node_coord_dict, list_i_1, list_i_2, ax):
+	state, cost = search(dist_dict, state, cost, args, ax, name)
 	if args.s:
 		plt.scatter(list_i_1, list_i_2)
 		plt.plot(list(map(lambda x: node_coord_dict[int(x)][0], state)), list(map(lambda x: node_coord_dict[int(x)][1], state)))
@@ -185,21 +181,24 @@ def run(dist_dict, state, cost, search, name, args, node_coord_dict, list_i_1, l
 	
 
 def main() -> None:
-	
+	global max_it
 	# Arguments and values 
 	parser = argparse.ArgumentParser()
 	
 	# Chose path to instance
-	# parser.add_argument("path", help="Enter path tho the instance file (include tsp)", type=str)
-	parser.add_argument("-s", help="Plot data and paths found", action="store_true", default=False)
+	parser.add_argument("-path", help="Enter path tho the instance file (include tsp)", type=str, default="Instances/a280.tsp")
+	parser.add_argument("-alg", help="Enter number for alg \n-1: All (Default)\n0: First ascent from rand\n1: First ascent from randx4000\n2: Steepest ascent from rand\n3: Steepest ascent from randx4000\n4: Random ascent from rand\n5: Random ascent from randx4000", type=int, default=-1)
+	parser.add_argument("-s", help="Plot Ppaths found", action="store_true", default=False)
+	parser.add_argument("-l", help="Plot path length", action="store_true", default=False)
+
 	
 	# Parse agruments
 	args = parser.parse_args()
 	
 	# Read file
-	# f = open(args.path)
-	# path = args.path 
-	path = "Instances/a280.tsp"
+	f = open(args.path)
+	path = args.path 
+	# path = "Instances/a280.tsp"
 	f = open(path)
 	lines = f.readlines()
 	f.close()
@@ -214,56 +213,57 @@ def main() -> None:
 		plt.scatter(list_i_1, list_i_2)
 		#plt.plot([1,4,5], [2,2,3])
 		plt.show()
+
+	fig, ax = plt.subplots()
 	
 	# Random state
-	start = default_timer()
-	random_state, random_cost = random_search(dist_dict)
-	stop = default_timer()
-	print('Exec time:', stop - start)
-	print('First Random search cost: ')
-	print(random_cost, '\n')
+	random_state, random_cost = random_search(dist_dict, args, ax)
 	
 	if args.s:
 		plt.scatter(list_i_1, list_i_2)
 		plt.plot(list(map(lambda x: node_coord_dict[int(x)][0], random_state)), list(map(lambda x: node_coord_dict[int(x)][1], random_state)))
 		plt.show()
 
-	# Best of 100 random states
-	start = default_timer()
-	iter_random_state, iter_random_cost = random_search(dist_dict, i=100)
-	stop = default_timer()
-	#print(cost,'\n',new_state)
-	print('Exec time:', stop - start)
-	print('Best of 100 iteration random search cost: ')
-	print(iter_random_cost,'\n')
+	# Best of 4000 random states
+	iter_random_state, iter_random_cost = random_search(dist_dict, args, ax, i=4000)
 
 	if args.s:
 		plt.scatter(list_i_1, list_i_2)
 		plt.plot(list(map(lambda x: node_coord_dict[int(x)][0], iter_random_state)), list(map(lambda x: node_coord_dict[int(x)][1], iter_random_state)))
 		plt.show()
 
+	if args.alg == 0 or args.alg == -1:
+		state, cost = run(dist_dict, random_state, random_cost, first_ascent_hill_climbing_search, 'First hill climbing search cost from random start: ', args, node_coord_dict, list_i_1, list_i_2, ax)
+	if args.alg == 1 or args.alg == -1:
+		state, cost = run(dist_dict, iter_random_state, iter_random_cost, first_ascent_hill_climbing_search, 'First hill climbing search cost from best out of 4000 random start: ', args, node_coord_dict, list_i_1, list_i_2, ax)
 
-	# state, cost = run(dist_dict, random_state, random_cost, first_ascent_hill_climbing_search, 'First hill climbing search cost from random start: ', args, node_coord_dict, list_i_1, list_i_2)
-	# state, cost = run(dist_dict, iter_random_state, iter_random_cost, first_ascent_hill_climbing_search, 'First hill climbing search cost from best out of 100 random start: ', args, node_coord_dict, list_i_1, list_i_2)
+	if args.alg == 2 or args.alg == -1:
+		state, cost = run(dist_dict, random_state, random_cost, steepest_ascent_hill_climbing_search, 'Steepest hill climbing search cost from random start: ', args, node_coord_dict, list_i_1, list_i_2, ax)
+	if args.alg == 3 or args.alg == -1:
+		state, cost = run(dist_dict, iter_random_state, iter_random_cost, steepest_ascent_hill_climbing_search, 'Steepest hill climbing search cost from best out of 4000 random start: ', args, node_coord_dict, list_i_1, list_i_2, ax)
 
-	state, cost = run(dist_dict, random_state, random_cost, steepest_ascent_hill_climbing_search, 'Steepest hill climbing search cost from random start: ', args, node_coord_dict, list_i_1, list_i_2)
-	state, cost = run(dist_dict, iter_random_state, iter_random_cost, steepest_ascent_hill_climbing_search, 'Steepest hill climbing search cost from best out of 100 random start: ', args, node_coord_dict, list_i_1, list_i_2)
+	if args.alg == 4 or args.alg == -1:
+		state, cost = run(dist_dict, random_state, random_cost, random_ascent_hill_climbing_search, 'Random hill climbing search cost from random start: ', args, node_coord_dict, list_i_1, list_i_2, ax)
+	if args.alg == 5 or args.alg == -1:
+		state, cost = run(dist_dict, iter_random_state, iter_random_cost, random_ascent_hill_climbing_search, 'Random hill climbing search cost from best out of 4000 random start: ', args, node_coord_dict, list_i_1, list_i_2, ax)
 
-	state, cost = run(dist_dict, random_state, random_cost, random_ascent_hill_climbing_search, 'Random hill climbing search cost from random start: ', args, node_coord_dict, list_i_1, list_i_2)
-	state, cost = run(dist_dict, iter_random_state, iter_random_cost, random_ascent_hill_climbing_search, 'Random hill climbing search cost from best out of 100 random start: ', args, node_coord_dict, list_i_1, list_i_2)
+	# Best of max iterations random states
+	iter_random_state_500000, iter_random_cost_500000 = random_search(dist_dict, args, ax, i=max_it)
+
+	if args.l:
+		plt.legend()
+		plt.show()
 
 	f = open("solution.csv", "w")
 	for x in state:
 		f.write(str(x)+'\n')
 	f.close()
 
-	# system('cls' if os.name == 'nt' else 'clear')
-	# print(cost)
+	system('cls' if os.name == 'nt' else 'clear')
+	print(cost)
 	
 
 if __name__ == "__main__":
 	print()
 	main()
-	print("End")
-	
-	
+	# print("End")
