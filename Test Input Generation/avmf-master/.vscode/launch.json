@@ -1,0 +1,105 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch AllZeros",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.AllZeros",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch GenerateInputData",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.GenerateInputData",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch OneMax",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.OneMax",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch Quadratic",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.Quadratic",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch RequirementAssignmentOptimization",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.RequirementAssignmentOptimization",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch StringOptimization",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.StringOptimization",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch TestCaseGeneration",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.TestCaseGeneration",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch TestCasePrioritization",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.TestCasePrioritization",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch TestCaseSelection",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.TestCaseSelection",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch NetworkEnvironment",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.testoptimization.behaviourpair.NetworkEnvironment",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch State",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.testoptimization.behaviourpair.State",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch Transition",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.testoptimization.behaviourpair.Transition",
+            "projectName": "avmf"
+        },
+        {
+            "type": "java",
+            "name": "Launch ValueSet",
+            "request": "launch",
+            "mainClass": "org.avmframework.examples.testoptimization.behaviourpair.ValueSet",
+            "projectName": "avmf"
+        }
+    ]
+}
