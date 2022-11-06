@@ -1,0 +1,21 @@
+def add (a,b):
+	if b > a :
+		print("1T")
+		b = b -a
+	else :
+		print("1F")
+	if a > b:
+		print("2T")
+		b = a - b
+	else :
+		print("2F")
+	if a ==b :
+		print("3T")
+		if a == 0 :
+			print('4T')
+		else :
+			print('4F')
+	else:
+		print('3F')
+
+add

@@ -1,0 +1,53 @@
+def classify(x,y,z):
+	if x > y :
+		print("1T")
+		t = x
+		x = y
+		y = t
+	else:
+		print("1F")
+	if x > z :
+		print("2T")
+		t = x
+		x = z
+		z = t	
+	else:
+		print("2F")
+	if y > z :
+		print("3T")
+		t = y
+		y = z
+		z = t
+	else:
+		print("3F")
+	if x + y <= z:
+		print("4T")
+		print("N/A")
+	else:
+		print("4F")
+		type = "SCA"
+		if x ==y:
+			print("5T")
+			if y ==z:
+				print("6T")
+				print("EQU")
+			else:
+				print("6F")
+		else :
+			print("5F")
+			if x == y:
+				print("7T")
+				print("ISO")
+				return(x,y,z)
+			elif y == z:
+				print("8T")
+				print("ISO")
+			else:
+				print("7F")
+				print("8F")
+	return False	
+	
+	
+classify
+
+
