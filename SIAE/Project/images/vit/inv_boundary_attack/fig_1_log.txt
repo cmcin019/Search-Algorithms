@@ -1,0 +1,7 @@
+Model_R:    	98.4375
+Model_A:    	15.625
+Oracle_R:  	100.0
+Oracle_A:  	28.125
+Brother_R: 	87.5
+Brother_A: 	42.1875
+
